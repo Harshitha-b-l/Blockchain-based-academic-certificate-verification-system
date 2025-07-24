@@ -1,0 +1,60 @@
+pragma solidity ^0.8.0;
+
+contract Cert {
+    struct College {
+        string colname;
+        bool value;
+    }
+    
+    struct CertDetails {
+        string fname;
+        string lname;
+        string course;
+    }
+    
+    mapping(address => CertDetails) certificates;
+    mapping(address => College) colleges;
+    
+    address owner;
+
+    // Constructor
+    constructor() {
+        owner = msg.sender;
+    }
+
+    // Modifier to restrict functions to the owner
+    modifier ownerOnly {
+        require(owner == msg.sender, "Only the owner can perform this action");
+        _;
+    }
+
+    // Event when a college is added
+    event CollAdded(string name);
+    
+    // Event when a certificate is added
+    event CertAdded(string fname, string lname, string course, string cname);
+    
+    // Add a new college
+    function addCollege(address coladd, string memory name) public ownerOnly {
+        colleges[coladd] = College(name, true);
+        emit CollAdded(name); // Emit the event with the actual college name
+    }
+    
+    // Check if a college is valid
+    function checkColl(address col) public view returns (bool) {
+        return colleges[col].value;
+    }
+    
+    // View certificate details (returning first name here)
+    function viewCert(address sender) public view returns (string memory) {
+        return certificates[sender].fname;
+    }
+    
+    // Add a certificate if the sender is a valid college
+    function addCert(string memory fname, string memory lname, string memory course) public {
+        if (checkColl(msg.sender)) {
+            certificates[msg.sender] = CertDetails(fname, lname, course);
+            emit CertAdded(fname, lname, course, colleges[msg.sender].colname);
+        }
+    }
+}
